@@ -16,8 +16,8 @@ namespace Stride.CommunityToolkit.Rendering.DebugShapes;
 public class ImmediateDebugRenderObject : RenderObject
 {
     /* messages */
-    internal readonly FastList<Renderable> renderablesWithDepth = new FastList<Renderable>();
-    internal readonly FastList<Renderable> renderablesNoDepth = new FastList<Renderable>();
+    internal List<Renderable> renderablesWithDepth = [];
+    internal List<Renderable> renderablesNoDepth = [];
 
     /* accumulators used when data is being pushed to the system */
     internal Primitives totalPrimitives, totalPrimitivesNoDepth;

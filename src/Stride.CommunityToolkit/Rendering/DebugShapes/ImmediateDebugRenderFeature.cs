@@ -1,6 +1,7 @@
 // Copyright (c) Stride contributors (https://stride3d.net)
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
+using Stride.CommunityToolkit.Extensions;
 using Stride.Core.Collections;
 using Stride.Core.Threading;
 using Stride.DebugRendering;
@@ -292,14 +293,14 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
     private Buffer colorBuffer;
 
     /* intermediate message related data, written to in extract */
-    private readonly FastList<InstanceData> instances = new FastList<InstanceData>(1);
+    private readonly List<InstanceData> _instances = [];
 
     /* data written to buffers in prepare */
-    private readonly FastList<Matrix> transforms = new FastList<Matrix>(1);
-    private readonly FastList<Color> colors = new FastList<Color>(1);
+    private readonly List<Matrix> _transforms = new(1);
+    private readonly List<Color> _colors = new(1);
 
     /* data only for line rendering */
-    private readonly FastList<LineVertex> lineVertices = new FastList<LineVertex>(1);
+    private readonly List<LineVertex> _lineVertices = new();
 
     public ImmediateDebugRenderFeature()
     {
@@ -436,93 +437,119 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
         }
 
         // allocate our buffers with position/colour etc data
+        _transforms.Add(new Matrix());
         var newTransformBuffer = Buffer.Structured.New<Matrix>(device, 1);
         transformBuffer = newTransformBuffer;
 
-        var newColourBuffer = Buffer.Structured.New(device, colors.Items);
+        _colors.Add(new Color());
+        var newColourBuffer = Buffer.Structured.New(device, _colors.ToArray());
         colorBuffer = newColourBuffer;
 
-        var newLineVertexBuffer = Buffer.Vertex.New(device, lineVertices.Items, GraphicsResourceUsage.Dynamic);
+        // Add a default value to give the buffer a default unit size
+        _lineVertices.Add(new LineVertex());
+        var newLineVertexBuffer = Buffer.Vertex.New(device, _lineVertices.ToArray(), GraphicsResourceUsage.Dynamic);
         lineVertexBuffer = newLineVertexBuffer;
-
     }
 
     public override void Extract()
     {
 
-        void ProcessRenderables(FastList<Renderable> renderables, ref Primitives offsets)
+        void ProcessRenderables(List<Renderable> renderables, ref Primitives offsets)
         {
 
             for (int i = 0; i < renderables.Count; ++i)
             {
-                ref var cmd = ref renderables.Items[i];
+                var cmd = renderables[i];
                 switch (cmd.Type)
                 {
                     case RenderableType.Quad:
-                        instances.Items[offsets.Quads].Position = cmd.QuadData.Position;
-                        instances.Items[offsets.Quads].Rotation = cmd.QuadData.Rotation;
-                        instances.Items[offsets.Quads].Scale = new Vector3(cmd.QuadData.Size.X, 1.0f, cmd.QuadData.Size.Y);
-                        instances.Items[offsets.Quads].Color = cmd.QuadData.Color;
+                        var quad = new InstanceData();
+                        quad.Position = cmd.QuadData.Position;
+                        quad.Rotation = cmd.QuadData.Rotation;
+                        quad.Scale = new Vector3(cmd.QuadData.Size.X, 1.0f, cmd.QuadData.Size.Y);
+                        quad.Color = cmd.QuadData.Color;
+                        _instances.Add(quad);
                         offsets.Quads++;
                         break;
                     case RenderableType.Circle:
-                        instances.Items[offsets.Circles].Position = cmd.CircleData.Position;
-                        instances.Items[offsets.Circles].Rotation = cmd.CircleData.Rotation;
-                        instances.Items[offsets.Circles].Scale = new Vector3(cmd.CircleData.Radius * 2.0f, 0.0f, cmd.CircleData.Radius * 2.0f);
-                        instances.Items[offsets.Circles].Color = cmd.CircleData.Color;
+                        var circle = new InstanceData();
+                        circle.Position = cmd.CircleData.Position;
+                        circle.Rotation = cmd.CircleData.Rotation;
+                        circle.Scale = new Vector3(cmd.CircleData.Radius * 2.0f, 0.0f, cmd.CircleData.Radius * 2.0f);
+                        circle.Color = cmd.CircleData.Color;
+                        _instances.Add(circle);
                         offsets.Circles++;
                         break;
                     case RenderableType.Sphere:
-                        instances.Items[offsets.Spheres].Position = cmd.SphereData.Position;
-                        instances.Items[offsets.Spheres].Rotation = Quaternion.Identity;
-                        instances.Items[offsets.Spheres].Scale = new Vector3(cmd.SphereData.Radius * 2);
-                        instances.Items[offsets.Spheres].Color = cmd.SphereData.Color;
+                        var sphere = new InstanceData();
+                        sphere.Position = cmd.SphereData.Position;
+                        sphere.Rotation = Quaternion.Identity;
+                        sphere.Scale = new Vector3(cmd.SphereData.Radius * 2);
+                        sphere.Color = cmd.SphereData.Color;
+                        _instances.Add(sphere);
                         offsets.Spheres++;
                         break;
                     case RenderableType.HalfSphere:
-                        instances.Items[offsets.HalfSpheres].Position = cmd.HalfSphereData.Position;
-                        instances.Items[offsets.HalfSpheres].Rotation = cmd.HalfSphereData.Rotation;
-                        instances.Items[offsets.HalfSpheres].Scale = new Vector3(cmd.HalfSphereData.Radius * 2);
-                        instances.Items[offsets.HalfSpheres].Color = cmd.HalfSphereData.Color;
+                        var halfSphere = new InstanceData();
+                        halfSphere.Position = cmd.HalfSphereData.Position;
+                        halfSphere.Rotation = cmd.HalfSphereData.Rotation;
+                        halfSphere.Scale = new Vector3(cmd.HalfSphereData.Radius * 2);
+                        halfSphere.Color = cmd.HalfSphereData.Color;
+                        _instances.Add(halfSphere);
                         offsets.HalfSpheres++;
                         break;
                     case RenderableType.Cube:
                         ref var start = ref cmd.CubeData.Start;
                         ref var end = ref cmd.CubeData.End;
-                        instances.Items[offsets.Cubes].Position = start;
-                        instances.Items[offsets.Cubes].Rotation = cmd.CubeData.Rotation;
-                        instances.Items[offsets.Cubes].Scale = end - start;
-                        instances.Items[offsets.Cubes].Color = cmd.CubeData.Color;
+                        var cube = new InstanceData();
+                        cube.Position = start;
+                        cube.Rotation = cmd.CubeData.Rotation;
+                        cube.Scale = end - start;
+                        cube.Color = cmd.CubeData.Color;
+                        _instances.Add(cube);
                         offsets.Cubes++;
                         break;
                     case RenderableType.Capsule:
-                        instances.Items[offsets.Capsules].Position = cmd.CapsuleData.Position;
-                        instances.Items[offsets.Capsules].Rotation = cmd.CapsuleData.Rotation;
-                        instances.Items[offsets.Capsules].Scale = new Vector3(cmd.CapsuleData.Radius * 2.0f, cmd.CapsuleData.Height, cmd.CapsuleData.Radius * 2.0f);
-                        instances.Items[offsets.Capsules].Color = cmd.CapsuleData.Color;
+                        var capsule = new InstanceData();
+                        capsule.Position = cmd.CapsuleData.Position;
+                        capsule.Rotation = cmd.CapsuleData.Rotation;
+                        capsule.Scale = new Vector3(cmd.CapsuleData.Radius * 2.0f, cmd.CapsuleData.Height, cmd.CapsuleData.Radius * 2.0f);
+                        capsule.Color = cmd.CapsuleData.Color;
+                        _instances.Add(capsule);
                         offsets.Capsules++;
                         break;
                     case RenderableType.Cylinder:
-                        instances.Items[offsets.Cylinders].Position = cmd.CylinderData.Position;
-                        instances.Items[offsets.Cylinders].Rotation = cmd.CylinderData.Rotation;
-                        instances.Items[offsets.Cylinders].Scale = new Vector3(cmd.CylinderData.Radius * 2.0f, cmd.CylinderData.Height, cmd.CylinderData.Radius * 2.0f);
-                        instances.Items[offsets.Cylinders].Color = cmd.CylinderData.Color;
+                        var cylinder = new InstanceData();
+                        cylinder.Position = cmd.CylinderData.Position;
+                        cylinder.Rotation = cmd.CylinderData.Rotation;
+                        cylinder.Scale = new Vector3(cmd.CylinderData.Radius * 2.0f, cmd.CylinderData.Height, cmd.CylinderData.Radius * 2.0f);
+                        cylinder.Color = cmd.CylinderData.Color;
+                        _instances.Add(cylinder);
                         offsets.Cylinders++;
                         break;
                     case RenderableType.Cone:
-                        instances.Items[offsets.Cones].Position = cmd.ConeData.Position;
-                        instances.Items[offsets.Cones].Rotation = cmd.ConeData.Rotation;
-                        instances.Items[offsets.Cones].Scale = new Vector3(cmd.ConeData.Radius * 2.0f, cmd.ConeData.Height, cmd.ConeData.Radius * 2.0f);
-                        instances.Items[offsets.Cones].Color = cmd.ConeData.Color;
+                        var cone = new InstanceData();
+                        cone.Position = cmd.ConeData.Position;
+                        cone.Rotation = cmd.ConeData.Rotation;
+                        cone.Scale = new Vector3(cmd.ConeData.Radius * 2.0f, cmd.ConeData.Height, cmd.ConeData.Radius * 2.0f);
+                        cone.Color = cmd.ConeData.Color;
+                        _instances.Add(cone);
                         offsets.Cones++;
                         break;
                     case RenderableType.Line:
-                        lineVertices.Items[offsets.Lines].Position = cmd.LineData.Start;
-                        lineVertices.Items[offsets.Lines++].Color = cmd.LineData.Color;
-                        lineVertices.Items[offsets.Lines].Position = cmd.LineData.End;
-                        lineVertices.Items[offsets.Lines++].Color = cmd.LineData.Color;
+                        var lineStart = new InstanceData();
+                        lineStart.Position = cmd.LineData.Start;
+                        lineStart.Color = cmd.LineData.Color;
+                        _instances.Add(lineStart);
+                        offsets.Lines++;
+                        var lineEnd = new InstanceData();
+                        lineEnd.Position = cmd.LineData.End;
+                        lineEnd.Color = cmd.LineData.Color;
+                        _instances.Add(lineEnd);
+                        offsets.Lines++;
                         break;
                 }
+                renderables[i] = cmd;
             }
 
         }
@@ -565,9 +592,9 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
             int primitivesWithoutDepth = SumBasicPrimitives(ref debugObject.totalPrimitivesNoDepth);
             int totalThingsToDraw = primitivesWithDepth + primitivesWithoutDepth;
 
-            instances.Resize(instances.Count + totalThingsToDraw, true);
+            //instances.Resize(instances.Count + totalThingsToDraw, true);
 
-            lineVertices.Resize(lineVertices.Count + debugObject.totalPrimitives.Lines * 2 + debugObject.totalPrimitivesNoDepth.Lines * 2, true);
+            //_lineVertices.Resize(lineVertices.Count + debugObject.totalPrimitives.Lines * 2 + debugObject.totalPrimitivesNoDepth.Lines * 2, true);
 
             var primitiveOffsets = SetupPrimitiveOffsets(ref debugObject.totalPrimitives, lastOffset);
             var primitiveOffsetsNoDepth = SetupPrimitiveOffsets(ref debugObject.totalPrimitivesNoDepth, primitiveOffsets.Cones + debugObject.totalPrimitives.Cones);
@@ -591,8 +618,8 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
             lastLineOffset = debugObject.instanceOffsetsNoDepth.Lines + debugObject.totalPrimitivesNoDepth.Lines * 2;
 
             // only now clear this data...
-            debugObject.renderablesWithDepth.Clear(true);
-            debugObject.renderablesNoDepth.Clear(true);
+            debugObject.renderablesWithDepth.Clear();
+            debugObject.renderablesNoDepth.Clear();
             debugObject.totalPrimitives.Clear();
             debugObject.totalPrimitivesNoDepth.Clear();
 
@@ -623,29 +650,29 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
     {
         unsafe
         {
-            fixed (Matrix* transformsPtr = transforms.Items)
+            fixed (Matrix* transformsPtr = _transforms.AsSpan())
             {
                 UpdateBufferIfNecessary(
                     context.GraphicsDevice, context.CommandList, buffer: ref transformBuffer,
-                    dataPtr: new DataPointer(transformsPtr, transforms.Count * Marshal.SizeOf<Matrix>()),
+                    dataPtr: new DataPointer(transformsPtr, _transforms.Count * Marshal.SizeOf<Matrix>()),
                     elementSize: Marshal.SizeOf<Matrix>()
                 );
             }
 
-            fixed (Color* colorsPtr = colors.Items)
+            fixed (Color* colorsPtr = _colors.AsSpan())
             {
                 UpdateBufferIfNecessary(
                     context.GraphicsDevice, context.CommandList, buffer: ref colorBuffer,
-                    dataPtr: new DataPointer(colorsPtr, colors.Count * Marshal.SizeOf<Color>()),
+                    dataPtr: new DataPointer(colorsPtr, _colors.Count * Marshal.SizeOf<Color>()),
                     elementSize: Marshal.SizeOf<Color>()
                 );
             }
 
-            fixed (LineVertex* lineVertsPtr = lineVertices.Items)
+            fixed (LineVertex* lineVertsPtr = _lineVertices.AsSpan())
             {
                 UpdateBufferIfNecessary(
                     context.GraphicsDevice, context.CommandList, buffer: ref lineVertexBuffer,
-                    dataPtr: new DataPointer(lineVertsPtr, lineVertices.Count * Marshal.SizeOf<LineVertex>()),
+                    dataPtr: new DataPointer(lineVertsPtr, _lineVertices.Count * Marshal.SizeOf<LineVertex>()),
                     elementSize: Marshal.SizeOf<LineVertex>()
                 );
             }
@@ -654,20 +681,33 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
 
     public override void Prepare(RenderDrawContext context)
     {
-        transforms.Resize(instances.Count, true);
-        colors.Resize(instances.Count, true);
+        //_transforms.Resize(_instances.Count, true);
+        //_colors.Resize(_instances.Count, true);
 
-        Dispatcher.For(0, transforms.Count, (i) =>
+        var difference = _instances.Count - _transforms.Count;
+
+        for(int i = 0; i < difference; i++)
         {
-            ref var instance = ref instances.Items[i];
-            Matrix.Transformation(ref instance.Scale, ref instance.Rotation, ref instance.Position, out transforms.Items[i]);
-            colors[i] = instance.Color;
+            _transforms.Add(new Matrix());
+            _colors.Add(new Color());
         }
-        );
+
+        if (_instances.Count > 0)
+        {
+
+            Dispatcher.For(0, _instances.Count, (i) =>
+            {
+                var instance = _instances[i];
+                Matrix.Transformation(ref instance.Scale, ref instance.Rotation, ref instance.Position, out var transform);
+                _transforms[i] = transform;
+                _colors[i] = instance.Color;
+                _instances[i] = instance;
+            });
+        }
 
         CheckBuffers(context);
-        lineVertices.Clear(true);
-        instances.Clear(true);
+        _lineVertices.Clear();
+        _instances.Clear();
     }
 
     private void SetPrimitiveRenderingPipelineState(CommandList commandList, bool depthTest, FillMode selectedFillMode, bool isDoubleSided = false, bool hasTransparency = false)
