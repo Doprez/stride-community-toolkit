@@ -1,7 +1,6 @@
 // Copyright (c) Stride contributors (https://stride3d.net)
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
-using Stride.Core.Collections;
 using Stride.Graphics;
 using Stride.Rendering;
 using static Stride.CommunityToolkit.Rendering.DebugShapes.ImmediateDebugRenderFeature;
@@ -16,17 +15,17 @@ namespace Stride.CommunityToolkit.Rendering.DebugShapes;
 public class ImmediateDebugRenderObject : RenderObject
 {
     /* messages */
-    internal List<Renderable> renderablesWithDepth = [];
-    internal List<Renderable> renderablesNoDepth = [];
+    internal List<Renderable> RenderablesWithDepth = [];
+    internal List<Renderable> RenderablesNoDepth = [];
 
     /* accumulators used when data is being pushed to the system */
-    internal Primitives totalPrimitives, totalPrimitivesNoDepth;
+    internal Primitives TotalPrimitives, TotalPrimitivesNoDepth;
 
     /* used to specify offset into instance data buffers when drawing */
-    internal Primitives instanceOffsets, instanceOffsetsNoDepth;
+    internal Primitives InstanceOffsets, InstanceOffsetsNoDepth;
 
     /* used in render stage to know how many of each instance to draw */
-    internal Primitives primitivesToDraw, primitivesToDrawNoDepth;
+    internal Primitives PrimitivesToDraw, PrimitivesToDrawNoDepth;
 
     /* state set from outside */
     internal FillMode CurrentFillMode { get; set; } = FillMode.Wireframe;
@@ -39,13 +38,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Quads++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Quads++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Quads++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Quads++;
         }
     }
 
@@ -55,13 +54,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Circles++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Circles++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Circles++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Circles++;
         }
     }
 
@@ -71,13 +70,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Spheres++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Spheres++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Spheres++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Spheres++;
         }
     }
 
@@ -87,13 +86,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.HalfSpheres++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.HalfSpheres++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.HalfSpheres++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.HalfSpheres++;
         }
     }
 
@@ -103,13 +102,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Cubes++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Cubes++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Cubes++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Cubes++;
         }
     }
 
@@ -119,13 +118,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Capsules++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Capsules++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Capsules++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Capsules++;
         }
     }
 
@@ -135,13 +134,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Cylinders++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Cylinders++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Cylinders++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Cylinders++;
         }
     }
 
@@ -151,13 +150,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Cones++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Cones++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Cones++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Cones++;
         }
     }
 
@@ -167,13 +166,13 @@ public class ImmediateDebugRenderObject : RenderObject
         var msg = new Renderable(ref cmd);
         if (depthTest)
         {
-            renderablesWithDepth.Add(msg);
-            totalPrimitives.Lines++;
+            RenderablesWithDepth.Add(msg);
+            TotalPrimitives.Lines++;
         }
         else
         {
-            renderablesNoDepth.Add(msg);
-            totalPrimitivesNoDepth.Lines++;
+            RenderablesNoDepth.Add(msg);
+            TotalPrimitivesNoDepth.Lines++;
         }
     }
 }

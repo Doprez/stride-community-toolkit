@@ -545,6 +545,9 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
                 renderables[i] = cmd;
             }
 
+            // Add to the instances if the size exceeds the size of the current initialized List
+            // else reuse an existing index.
+            // This is a forever expanding List which could likely be done better.
             void AddInstance(InstanceData instance, int index)
             {
                 if(_instances.Count - 1 > index)
@@ -605,39 +608,39 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
             ImmediateDebugRenderObject debugObject = (ImmediateDebugRenderObject)renderObject;
 
             /* everything except lines is included here, as lines just get accumulated into a buffer directly */
-            int primitivesWithDepth = SumBasicPrimitives(ref debugObject.totalPrimitives);
-            int primitivesWithoutDepth = SumBasicPrimitives(ref debugObject.totalPrimitivesNoDepth);
+            int primitivesWithDepth = SumBasicPrimitives(ref debugObject.TotalPrimitives);
+            int primitivesWithoutDepth = SumBasicPrimitives(ref debugObject.TotalPrimitivesNoDepth);
             int totalThingsToDraw = primitivesWithDepth + primitivesWithoutDepth;
 
             //instances.Resize(instances.Count + totalThingsToDraw, true);
             //_lineVertices.Resize(lineVertices.Count + debugObject.totalPrimitives.Lines * 2 + debugObject.totalPrimitivesNoDepth.Lines * 2, true);
 
-            var primitiveOffsets = SetupPrimitiveOffsets(ref debugObject.totalPrimitives, lastOffset);
-            var primitiveOffsetsNoDepth = SetupPrimitiveOffsets(ref debugObject.totalPrimitivesNoDepth, primitiveOffsets.Cones + debugObject.totalPrimitives.Cones);
+            var primitiveOffsets = SetupPrimitiveOffsets(ref debugObject.TotalPrimitives, lastOffset);
+            var primitiveOffsetsNoDepth = SetupPrimitiveOffsets(ref debugObject.TotalPrimitivesNoDepth, primitiveOffsets.Cones + debugObject.TotalPrimitives.Cones);
 
             /* line rendering data, separate buffer so offset isnt relative to the other data */
             primitiveOffsets.Lines = 0 + lastLineOffset;
-            primitiveOffsetsNoDepth.Lines = debugObject.totalPrimitives.Lines * 2 + lastLineOffset;
+            primitiveOffsetsNoDepth.Lines = debugObject.TotalPrimitives.Lines * 2 + lastLineOffset;
 
             /* save instance offsets before we mutate them as we need them when rendering */
-            debugObject.instanceOffsets = primitiveOffsets;
-            debugObject.instanceOffsetsNoDepth = primitiveOffsetsNoDepth;
+            debugObject.InstanceOffsets = primitiveOffsets;
+            debugObject.InstanceOffsetsNoDepth = primitiveOffsetsNoDepth;
 
-            ProcessRenderables(debugObject.renderablesWithDepth, ref primitiveOffsets);
-            ProcessRenderables(debugObject.renderablesNoDepth, ref primitiveOffsetsNoDepth);
+            ProcessRenderables(debugObject.RenderablesWithDepth, ref primitiveOffsets);
+            ProcessRenderables(debugObject.RenderablesNoDepth, ref primitiveOffsetsNoDepth);
 
-            debugObject.primitivesToDraw = debugObject.totalPrimitives;
-            debugObject.primitivesToDrawNoDepth = debugObject.totalPrimitivesNoDepth;
+            debugObject.PrimitivesToDraw = debugObject.TotalPrimitives;
+            debugObject.PrimitivesToDrawNoDepth = debugObject.TotalPrimitivesNoDepth;
 
             // store the last offsets, so we can start from there next iteration
-            lastOffset = debugObject.instanceOffsetsNoDepth.Cones + debugObject.totalPrimitivesNoDepth.Cones;
-            lastLineOffset = debugObject.instanceOffsetsNoDepth.Lines + debugObject.totalPrimitivesNoDepth.Lines * 2;
+            lastOffset = debugObject.InstanceOffsetsNoDepth.Cones + debugObject.TotalPrimitivesNoDepth.Cones;
+            lastLineOffset = debugObject.InstanceOffsetsNoDepth.Lines + debugObject.TotalPrimitivesNoDepth.Lines * 2;
 
             // only now clear this data...
-            debugObject.renderablesWithDepth.Clear();
-            debugObject.renderablesNoDepth.Clear();
-            debugObject.totalPrimitives.Clear();
-            debugObject.totalPrimitivesNoDepth.Clear();
+            debugObject.RenderablesWithDepth.Clear();
+            debugObject.RenderablesNoDepth.Clear();
+            debugObject.TotalPrimitives.Clear();
+            debugObject.TotalPrimitivesNoDepth.Clear();
 
         }
     }
@@ -903,11 +906,11 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
 
             // update pipeline state, render with depth test first
             SetPrimitiveRenderingPipelineState(commandList, depthTest: true, selectedFillMode: debugObject.CurrentFillMode, hasTransparency: objectHasTransparency);
-            RenderPrimitives(context, renderView, ref debugObject.instanceOffsets, ref debugObject.primitivesToDraw, depthTest: true, fillMode: debugObject.CurrentFillMode, hasTransparency: objectHasTransparency);
+            RenderPrimitives(context, renderView, ref debugObject.InstanceOffsets, ref debugObject.PrimitivesToDraw, depthTest: true, fillMode: debugObject.CurrentFillMode, hasTransparency: objectHasTransparency);
 
             // render without depth test second
             SetPrimitiveRenderingPipelineState(commandList, depthTest: false, selectedFillMode: debugObject.CurrentFillMode, hasTransparency: objectHasTransparency);
-            RenderPrimitives(context, renderView, offsets: ref debugObject.instanceOffsetsNoDepth, counts: ref debugObject.primitivesToDrawNoDepth, depthTest: false, fillMode: debugObject.CurrentFillMode, hasTransparency: objectHasTransparency);
+            RenderPrimitives(context, renderView, offsets: ref debugObject.InstanceOffsetsNoDepth, counts: ref debugObject.PrimitivesToDrawNoDepth, depthTest: false, fillMode: debugObject.CurrentFillMode, hasTransparency: objectHasTransparency);
 
         }
     }
