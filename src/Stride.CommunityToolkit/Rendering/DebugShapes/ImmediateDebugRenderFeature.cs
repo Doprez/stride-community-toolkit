@@ -711,17 +711,14 @@ public class ImmediateDebugRenderFeature : RootRenderFeature
             colors[i] = instances[i].Color;
         }
 
-        //if (_instances.Count > 0)
+        //Dispatcher.For(0, _transforms.Count, (i) =>
         //{
-        //    Dispatcher.For(0, _transforms.Count, (i) =>
-        //    {
-        //        var instance = _instances[i];
-        //        Matrix.Transformation(ref instance.Scale, ref instance.Rotation, ref instance.Position, out var transform);
-        //        _transforms[i] = transform;
-        //        _colors[i] = instance.Color;
-        //        _instances[i] = instance;
-        //    });
-        //}
+        //    var instance = _instances[i];
+        //    Matrix.Transformation(ref instance.Scale, ref instance.Rotation, ref instance.Position, out var transform);
+        //    _transforms[i] = transform;
+        //    _colors[i] = instance.Color;
+        //    _instances[i] = instance;
+        //});
 
         CheckBuffers(context);
     }
