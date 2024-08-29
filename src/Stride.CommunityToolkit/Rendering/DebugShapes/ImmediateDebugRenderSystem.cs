@@ -208,13 +208,13 @@ public class ImmediateDebugRenderSystem : GameSystemBase
         public Color Color;
     }
 
-    private List<DebugRenderable> renderMessages = [];
+    private List<DebugRenderable> _renderMessages = [];
     private List<DebugRenderable> _renderMessagesWithLifetime = [];
 
-    private ImmediateDebugRenderObject solidPrimitiveRenderer;
-    private ImmediateDebugRenderObject wireframePrimitiveRenderer;
-    private ImmediateDebugRenderObject transparentSolidPrimitiveRenderer;
-    private ImmediateDebugRenderObject transparentWireframePrimitiveRenderer;
+    private ImmediateDebugRenderObject _solidPrimitiveRenderer;
+    private ImmediateDebugRenderObject _wireframePrimitiveRenderer;
+    private ImmediateDebugRenderObject _transparentSolidPrimitiveRenderer;
+    private ImmediateDebugRenderObject _transparentWireframePrimitiveRenderer;
 
     public Color PrimitiveColor { get; set; } = Color.LightGreen;
 
@@ -247,11 +247,11 @@ public class ImmediateDebugRenderSystem : GameSystemBase
         }
         else
         {
-            renderMessages.Add(msg);
+            _renderMessages.Add(msg);
             // drop one old message if the tail size has been reached
-            if (renderMessages.Count > MaxPrimitives)
+            if (_renderMessages.Count > MaxPrimitives)
             {
-                renderMessages.RemoveAt(renderMessages.Count - 1);
+                _renderMessages.RemoveAt(_renderMessages.Count - 1);
             }
         }
     }
@@ -377,7 +377,7 @@ public class ImmediateDebugRenderSystem : GameSystemBase
             Stage = ImmediateDebugRenderFeature.DebugRenderStage.Opaque
         };
         visibilityGroup.RenderObjects.Add(newSolidRenderObject);
-        solidPrimitiveRenderer = newSolidRenderObject;
+        _solidPrimitiveRenderer = newSolidRenderObject;
 
         var newWireframeRenderObject = new ImmediateDebugRenderObject
         {
@@ -385,7 +385,7 @@ public class ImmediateDebugRenderSystem : GameSystemBase
             Stage = ImmediateDebugRenderFeature.DebugRenderStage.Opaque
         };
         visibilityGroup.RenderObjects.Add(newWireframeRenderObject);
-        wireframePrimitiveRenderer = newWireframeRenderObject;
+        _wireframePrimitiveRenderer = newWireframeRenderObject;
 
         var newTransparentSolidRenderObject = new ImmediateDebugRenderObject
         {
@@ -393,7 +393,7 @@ public class ImmediateDebugRenderSystem : GameSystemBase
             Stage = ImmediateDebugRenderFeature.DebugRenderStage.Transparent
         };
         visibilityGroup.RenderObjects.Add(newTransparentSolidRenderObject);
-        transparentSolidPrimitiveRenderer = newTransparentSolidRenderObject;
+        _transparentSolidPrimitiveRenderer = newTransparentSolidRenderObject;
 
         var newTransparentWireframeRenderObject = new ImmediateDebugRenderObject
         {
@@ -401,7 +401,7 @@ public class ImmediateDebugRenderSystem : GameSystemBase
             Stage = ImmediateDebugRenderFeature.DebugRenderStage.Transparent
         };
         visibilityGroup.RenderObjects.Add(newTransparentWireframeRenderObject);
-        transparentWireframePrimitiveRenderer = newTransparentWireframeRenderObject;
+        _transparentWireframePrimitiveRenderer = newTransparentWireframeRenderObject;
 
         return true;
 
@@ -413,7 +413,7 @@ public class ImmediateDebugRenderSystem : GameSystemBase
         if (!Enabled || !Visible)
             return;
 
-        if (wireframePrimitiveRenderer == null)
+        if (_wireframePrimitiveRenderer == null)
         {
             bool created = CreateDebugRenderObjects();
             if (!created)
@@ -421,12 +421,12 @@ public class ImmediateDebugRenderSystem : GameSystemBase
         }
 
         // TODO: check if i'm doing this correctly..
-        solidPrimitiveRenderer.RenderGroup = RenderGroup;
-        wireframePrimitiveRenderer.RenderGroup = RenderGroup;
-        transparentSolidPrimitiveRenderer.RenderGroup = RenderGroup;
-        transparentWireframePrimitiveRenderer.RenderGroup = RenderGroup;
+        _solidPrimitiveRenderer.RenderGroup = RenderGroup;
+        _wireframePrimitiveRenderer.RenderGroup = RenderGroup;
+        _transparentSolidPrimitiveRenderer.RenderGroup = RenderGroup;
+        _transparentWireframePrimitiveRenderer.RenderGroup = RenderGroup;
 
-        HandlePrimitives(gameTime, renderMessages);
+        HandlePrimitives(gameTime, _renderMessages);
         HandlePrimitives(gameTime, _renderMessagesWithLifetime);
 
         float delta = (float)gameTime.Elapsed.TotalSeconds;
@@ -442,7 +442,7 @@ public class ImmediateDebugRenderSystem : GameSystemBase
         _renderMessagesWithLifetime.RemoveAll((msg) => msg.Lifetime <= 0.0f);
 
         /* just clear our per-frame array */
-        renderMessages.Clear();
+        _renderMessages.Clear();
 
     }
 
@@ -453,11 +453,11 @@ public class ImmediateDebugRenderSystem : GameSystemBase
         {
             if (alpha < 255)
             {
-                return ((flags & DebugRenderableFlags.Solid) != 0) ? transparentSolidPrimitiveRenderer : transparentWireframePrimitiveRenderer;
+                return ((flags & DebugRenderableFlags.Solid) != 0) ? _transparentSolidPrimitiveRenderer : _transparentWireframePrimitiveRenderer;
             }
             else
             {
-                return ((flags & DebugRenderableFlags.Solid) != 0) ? solidPrimitiveRenderer : wireframePrimitiveRenderer;
+                return ((flags & DebugRenderableFlags.Solid) != 0) ? _solidPrimitiveRenderer : _wireframePrimitiveRenderer;
             }
         }
 

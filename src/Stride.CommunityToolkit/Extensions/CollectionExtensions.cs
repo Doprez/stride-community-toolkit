@@ -9,6 +9,11 @@ public static class CollectionExtensions
     {
         return CollectionsMarshal.AsSpan(list);
     }
+    public static Span<T> AsSpan<T>(this List<T> list, int startIndex, int length)
+    {
+        var listSpan = CollectionsMarshal.AsSpan(list);
+        return listSpan.Slice(startIndex, length);
+    }
 
     public static T[] GetInternalArray<T>(this List<T> list)
     {
